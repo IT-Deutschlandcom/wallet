@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Ivy Wallet</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0B0E1A;color:#EDEFF7;font-family:sans-serif;overflow-x:hidden}
+header{position:fixed;top:0;left:0;right:0;height:60px;background:#12162A;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:5;border-bottom:1px solid #1f2442}
+.menu{font-size:26px;margin-right:10px}
+.user{display:flex;align-items:center}
+.avatar{width:34px;height:34px;border-radius:50%;background:#7C4DFF;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:8px}
+.user b{font-size:15px}.user small{display:block;color:#7f86ad;font-size:11px}
+.usd{text-align:right;font-weight:bold;color:#4ade80;font-size:16px}.usd small{display:block;color:#7f86ad;font-size:10px;font-weight:normal}
+main{padding:76px 14px 30px}
+.card{background:#171C36;border-radius:18px;padding:18px;margin-bottom:14px}
+.hero{background:linear-gradient(135deg,#7C4DFF,#3b82f6)}
+.hero .l{opacity:.8;font-size:13px}.hero .v{font-size:34px;font-weight:bold;margin:6px 0}
+.row{display:flex;justify-content:space-between;align-items:center}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.btn{background:#7C4DFF;color:#fff;border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:bold;width:100%}
+.btn.alt{background:#232a4d}
+input,select{width:100%;background:#0B0E1A;color:#fff;border:1px solid #2b3361;border-radius:12px;padding:13px;font-size:15px;margin:6px 0 12px}
+label{font-size:12px;color:#7f86ad}
+h2{margin:4px 0 14px;font-size:20px}
+.tx{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #232a4d}
+.tx:last-child{border:0}.tx small{color:#7f86ad;display:block;font-size:11px;word-break:break-all;max-width:210px}
+.in{color:#4ade80}.out{color:#f87171}
+.chart{height:90px;width:100%}
+#scrim{position:fixed;inset:0;background:#0009;display:none;z-index:8}
+#side{position:fixed;top:0;bottom:0;left:-290px;width:280px;background:#12162A;z-index:9;transition:left .25s;padding-top:20px;overflow:auto}
+#side.open{left:0}
+#side .head{padding:10px 20px 20px;border-bottom:1px solid #232a4d;margin-bottom:8px}
+#side .head .avatar{width:56px;height:56px;font-size:22px;margin-bottom:10px}
+#side a{display:block;padding:14px 22px;font-size:15px}#side a.act{background:#232a4d;border-left:4px solid #7C4DFF}
+.pill{display:inline-block;background:#232a4d;border-radius:20px;padding:4px 10px;font-size:11px;color:#a5b4fc}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#4ade80;color:#022;padding:12px 18px;border-radius:12px;font-weight:bold;display:none;z-index:20;text-align:center}
+.mono{font-family:monospace;font-size:12px;word-break:break-all;color:#a5b4fc}
+.bar{height:8px;background:#232a4d;border-radius:4px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:#7C4DFF;width:0}
+.foot{text-align:center;color:#555d85;font-size:11px;margin-top:20px}
+</style></head><body>
+<header>
+  <div class="user"><span class="menu" onclick="toggle(1)">☰</span><div class="avatar">NA</div><div><b>Niklas Aerts</b><small>Ivy Wallet · Verifiziert ✔</small></div></div>
+  <div class="usd"><span id="usdTop"></span><small>Guthaben (USD)</small></div>
+</header>
+<div id="scrim" onclick="toggle(0)"></div>
+<nav id="side"></nav>
+<main id="view"></main>
+<div class="toast" id="toast"></div>
+<script>
+var PRICE=67250, S0=47329/PRICE;
+var KEY='ivy_state_v1';
+var names=['Hodl-Hannes','Satoshi\'s Nachbar','Krypto-Kalle','Moon-Maria','Lambo-Lukas','Whale-Wilma','Mining-Mike','Diamond-Dana'];
+function rnd(n,c){c=c||'0123456789abcdef';var s='';for(var i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+function addr(){return 'bc1q'+rnd(38,'023456789acdefghjklmnpqrstuvwxyz')}
+function txid(){return rnd(64)}
+function ago(m){return new Date(Date.now()-m*60000).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+var st=JSON.parse(localStorage.getItem(KEY)||'null');
+if(!st){st={btc:S0,mining:false,minedAt:Date.now(),wallets:[],txs:[]};
+ for(var i=0;i<names.length;i++)st.wallets.push({n:names[i],a:addr()});
+ var seed=[[0,0.2314,1],[2,0.05,-1],[4,0.4119,1],[1,0.0123,-1],[6,0.0987,1],[3,0.0031,-1]];
+ seed.forEach(function(s,i){st.txs.push({id:txid(),w:st.wallets[s[0]].n,a:st.wallets[s[0]].a,v:s[1]*s[2],t:ago(i*517+40),c:6+i*3})});
+ save()}
+function save(){localStorage.setItem(KEY,JSON.stringify(st))}
+function usd(){return st.btc*PRICE}
+function f$(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fb(n){return n.toFixed(8)}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(function(){t.style.display='none'},2600)}
+var pages=[['dash','🏠','Dashboard'],['send','📤','Senden'],['recv','📥','Empfangen'],['tx','🧾','Transaktionen'],['wal','👛','Wallets'],['swap','🔄','Swap'],['mine','⛏️','Mining'],['sec','🛡️','Sicherheit'],['set','⚙️','Einstellungen']];
+var cur='dash';
+function renderSide(){var h='<div class="head"><div class="avatar">NA</div><b>Niklas Aerts</b><br><span class="pill">VIP · Diamond Tier</span></div>';
+ pages.forEach(function(p){h+='<a class="'+(p[0]==cur?'act':'')+'" onclick="go(\''+p[0]+'\')">'+p[1]+'&nbsp; '+p[2]+'</a>'});
+ document.getElementById('side').innerHTML=h}
+function toggle(o){document.getElementById('side').className=o?'open':'';document.getElementById('scrim').style.display=o?'block':'none'}
+window.onBack=function(){if(document.getElementById('side').className=='open'){toggle(0);return true}if(cur!='dash'){go('dash');return true}return false};
+function go(p){cur=p;toggle(0);renderSide();var v=document.getElementById('view');v.innerHTML=R[p]();window.scrollTo(0,0);if(A[p])A[p]();top()}
+function top(){document.getElementById('usdTop').textContent=f$(usd())}
+function txRow(t){var inn=t.v>0;return '<div class="tx"><div><b>'+t.w+'</b><small>'+t.id+'</small><small>'+t.t+' · '+t.c+' Bestät.</small></div><div class="'+(inn?'in':'out')+'" style="text-align:right"><b>'+(inn?'+':'')+fb(t.v)+'</b><small style="text-align:right">'+f$(Math.abs(t.v)*PRICE)+'</small></div></div>'}
+var R={
+dash:function(){return '<div class="card hero"><div class="l">Gesamtguthaben</div><div class="v">₿ '+fb(st.btc)+'</div><div class="l">≈ '+f$(usd())+' · 1 BTC = '+f$(PRICE)+'</div></div>'+
+ '<div class="grid"><button class="btn" onclick="go(\'send\')">📤 Senden</button><button class="btn alt" onclick="go(\'recv\')">📥 Empfangen</button></div>'+
+ '<div class="card"><div class="row"><b>BTC / USD</b><span class="in">+3,42 % (24h)</span></div><svg class="chart" id="chart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg></div>'+
+ '<div class="card"><h2>Letzte Transaktionen</h2>'+st.txs.slice(0,4).map(txRow).join('')+'<button class="btn alt" onclick="go(\'tx\')">Alle anzeigen</button></div>'},
+send:function(){var o=st.wallets.map(function(w,i){return '<option value="'+i+'">'+w.n+' – '+w.a.slice(0,14)+'…</option>'}).join('');
+ return '<div class="card"><h2>📤 Bitcoin senden</h2><label>Empfänger-Wallet</label><select id="to">'+o+'</select><label>Betrag (BTC)</label><input id="amt" type="number" step="0.0001" placeholder="0.00000000"><div class="row"><small class="mono" id="usdhint">≈ $0.00</small><small class="mono" onclick="document.getElementById(\'amt\').value=(st.btc-0.00005).toFixed(8);hint()">MAX</small></div><br><label>Netzwerkgebühr</label><select><option>Niedrig (0,00001 BTC)</option><option>Mittel (0,00005 BTC)</option><option>Hoch (0,0002 BTC)</option></select><button class="btn" onclick="doSend()">Jetzt senden</button><div id="sendOut"></div></div>'},
+recv:function(){var a=st.wallets[0].a;return '<div class="card" style="text-align:center"><h2>📥 Empfangen</h2><svg id="qr" width="200" height="200" viewBox="0 0 21 21" style="background:#fff;border-radius:12px;padding:8px"></svg><p class="mono">bc1q'+rnd(38,'023456789acdefghjklmnpqrstuvwxyz')+'</p><button class="btn" onclick="toast(\'Adresse kopiert (nicht wirklich 😉)\')">Adresse kopieren</button></div>'},
+tx:function(){return '<div class="card"><h2>🧾 Alle Transaktionen</h2>'+st.txs.map(txRow).join('')+'</div>'},
+wal:function(){return '<div class="card"><h2>👛 Gespeicherte Wallets</h2>'+st.wallets.map(function(w){return '<div class="tx"><div><b>'+w.n+'</b><small>'+w.a+'</small></div><span class="pill">Aktiv</span></div>'}).join('')+'<button class="btn alt" onclick="newWallet()">+ Neue Wallet erfinden</button></div>'},
+swap:function(){return '<div class="card"><h2>🔄 Swap</h2><label>Von</label><select><option>BTC</option></select><label>Nach</label><select><option>ETH</option><option>DOGE</option><option>SHIB</option><option>NikCoin 🚀</option></select><input type="number" placeholder="Betrag"><button class="btn" onclick="toast(\'Swap fehlgeschlagen: Server ist im Urlaub 🏖️\')">Swappen</button></div>'},
+mine:function(){return '<div class="card"><h2>⛏️ Cloud-Mining</h2><p>Hashrate: <b id="hr">0 TH/s</b></p><div class="bar"><i id="mb"></i></div><p class="mono" id="ml">Bereit.</p><button class="btn" id="mbtn" onclick="toggleMine()">'+(st.mining?'Mining stoppen':'Mining starten')+'</button></div>'},
+sec:function(){return '<div class="card"><h2>🛡️ Sicherheit</h2><div class="tx"><span>2-Faktor-Authentifizierung</span><span class="in">An</span></div><div class="tx"><span>Biometrie</span><span class="in">An</span></div><div class="tx"><span>Verdächtige Zugriffe</span><span class="out">0</span></div><button class="btn" onclick="scan()">Sicherheits-Scan starten</button><p class="mono" id="scanout"></p></div>'},
+set:function(){return '<div class="card"><h2>⚙️ Einstellungen</h2><div class="tx"><span>Name</span><b>Niklas Aerts</b></div><div class="tx"><span>Version</span><span>1.0 (Prank Edition)</span></div><button class="btn alt" onclick="resetAll()">Alles zurücksetzen</button><p class="foot">Dies ist eine Spaß-App. Alle Wallets, Transaktions-IDs und Guthaben sind frei erfunden und haben keinen echten Wert.</p></div>'}};
+var A={dash:function(){var p=[],y=50;for(var i=0;i<30;i++){y+=(Math.random()-.45)*10;y=Math.max(10,Math.min(80,y));p.push((i*10.3)+','+(90-y))}
+ document.getElementById('chart').innerHTML='<polyline fill="none" stroke="#7C4DFF" stroke-width="2.5" points="'+p.join(' ')+'"/>'},
+ send:function(){document.getElementById('amt').oninput=hint},
+ recv:function(){var s='';for(var y=0;y<21;y++)for(var x=0;x<21;x++){var f=(x<7&&y<7)||(x>13&&y<7)||(x<7&&y>13);var on=f?!(x%6>0&&x%6<6&&y%6>0&&y%6<6&&!((x%6==3||x%6==2||x%6==4)&&(y%6>=2&&y%6<=4)))&&true:Math.random()>.5;if(f){var lx=x%14,ly=y%14;on=(lx==0||lx==6||ly==0||ly==6)||(lx>=2&&lx<=4&&ly>=2&&ly<=4)}if(on)s+='<rect x="'+x+'" y="'+y+'" width="1" height="1"/>'}
+ document.getElementById('qr').innerHTML=s},
+ mine:function(){if(st.mining)runMine()}};
+function hint(){var v=parseFloat(document.getElementById('amt').value)||0;document.getElementById('usdhint').textContent='≈ '+f$(v*PRICE)}
+function doSend(){var v=parseFloat(document.getElementById('amt').value);var w=st.wallets[document.getElementById('to').value];
+ if(!(v>0)){toast('Bitte Betrag eingeben');return}
+ if(v+0.00005>st.btc){toast('Nicht genug Guthaben');return}
+ st.btc-=v+0.00005;var t={id:txid(),w:w.n,a:w.a,v:-v,t:ago(0),c:0};st.txs.unshift(t);save();top();
+ var out=document.getElementById('sendOut');
+ out.innerHTML='<p>Transaktion gesendet ✅</p><p class="mono">TXID:<br>'+t.id+'</p><p>Bestätigungen: <b id="cf">0</b>/6</p><div class="bar"><i id="cb"></i></div>';
+ var n=0,iv=setInterval(function(){n++;t.c=n;document.getElementById('cf').textContent=n;document.getElementById('cb').style.width=(n/6*100)+'%';if(n>=6){clearInterval(iv);save();toast('✔ '+fb(v)+' BTC an '+w.n+' überwiesen')}},900)}
+function newWallet(){var n=['Pizza-Paul','Meme-Max','Rocket-Rita','Gold-Gisela','Bitcoin-Bernd'];st.wallets.push({n:n[Math.floor(Math.random()*n.length)]+' #'+Math.floor(Math.random()*99),a:addr()});save();go('wal')}
+var mt;function runMine(){var b=document.getElementById('mbtn');clearInterval(mt);var p=0;document.getElementById('hr').textContent=(80+Math.floor(Math.random()*40))+' TH/s';
+ mt=setInterval(function(){if(!document.getElementById('mb')){clearInterval(mt);return}p=(p+7)%100;document.getElementById('mb').style.width=p+'%';document.getElementById('ml').textContent='Hash: '+rnd(40);if(Math.random()<.05){st.btc+=0.00021;save();top();toast('⛏️ Block gefunden! +0.00021 BTC')}},250)}
+function toggleMine(){st.mining=!st.mining;save();if(st.mining)runMine();else{clearInterval(mt);document.getElementById('hr').textContent='0 TH/s';document.getElementById('ml').textContent='Gestoppt.'}document.getElementById('mbtn').textContent=st.mining?'Mining stoppen':'Mining starten'}
+function scan(){var o=document.getElementById('scanout'),L=['Prüfe Wallet…','Analysiere Blockchain…','Suche nach Hackern…','Frage NSA…','Keine Bedrohungen gefunden ✔'],i=0;var iv=setInterval(function(){o.textContent=L[i++];if(i>=L.length)clearInterval(iv)},700)}
+function resetAll(){localStorage.removeItem(KEY);location.reload()}
+setInterval(function(){if(cur=='dash')top()},2000);
+go('dash');
+</script></body></html>
